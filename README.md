@@ -44,7 +44,7 @@ pip install git+https://github.com/Michaol/emotion_system.git
 
 # 方式 2: 本地编译
 git clone https://github.com/Michaol/emotion_system.git
-cd emotion_system/openclaw-emotion-engine
+cd emotion_system
 pip install maturin
 maturin develop --release
 ```
@@ -147,7 +147,6 @@ A high-performance emotion simulation engine with a **Rust core**. Implements **
 pip install git+https://github.com/Michaol/emotion_system.git
 
 # Or local build
-cd openclaw-emotion-engine
 pip install maturin
 maturin develop --release
 ```

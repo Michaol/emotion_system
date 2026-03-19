@@ -9,7 +9,7 @@
 pip install git+https://github.com/Michaol/emotion_system.git
 
 # or local build
-cd openclaw-emotion-engine && pip install maturin && maturin develop --release
+pip install maturin && maturin develop --release
 ```
 
 Verify: `emotion-mcp --help`
