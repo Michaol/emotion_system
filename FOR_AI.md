@@ -46,6 +46,29 @@ fastmcp run emotion_engine.mcp_server:mcp --transport sse --host 0.0.0.0 --port 
 { "mcpServers": { "emotion": { "url": "http://<host>:8080/sse" } } }
 ```
 
+## SESSION STARTUP (Required)
+
+**Problem:** OpenClaw does NOT auto-load MCP resources on session start. If you don't read emotion state manually, your personality resets every conversation.
+
+**Fix:** Add this to your AGENTS.md Session Startup section:
+
+```markdown
+## Session Startup
+
+1. Read `memory/YYYY-MM-DD.md` (today + yesterday) if exists
+2. Read `MEMORY.md` if in main session
+3. **Read emotion state:** Read MCP resource `emotion://state/{agent_id}` to restore VAD, Plutchik label, and memories from last session
+4. **Read emotion prompt:** Read MCP resource `emotion://prompt/{agent_id}` to inject current emotional context
+```
+
+**Why this is needed:** OpenClaw (as of v2026.3) has a known issue ([#22420](https://github.com/openclaw/openclaw/issues/22420)) where workspace rules in AGENTS.md are not guaranteed to execute automatically. MCP resources must be explicitly read by the agent — they are not injected into context like SOUL.md.
+
+**Workflow:**
+1. Agent starts → reads AGENTS.md → finds Session Startup rule
+2. Agent calls `Read MCP resource: emotion://state/Alice`
+3. Engine loads persisted state from `state/Alice_state.json`
+4. Agent continues conversation with restored emotional context
+
 ## TOOLS
 
 All accept optional `agent_id` (default: env `EMOTION_AGENT_ID`).
