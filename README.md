@@ -141,15 +141,104 @@ A high-performance emotion simulation engine with a **Rust core**. Implements **
 - **Emotion-Memory Coupling**: Events stored with emotion tags, power-law decay, recall reinforcement, cosine-similarity retrieval.
 - **Rich Prompt XML**: New `<plutchik>` and `<memories>` nodes for LLM context enrichment.
 
+### Key Features
+
+| Feature | Description |
+|---------|-------------|
+| **VAD Emotion Modeling** | Valence (pleasure/displeasure), Arousal (activation/calm), Dominance (control/submission) |
+| **Plutchik 8 Emotions** | Joy, Trust, Fear, Surprise, Sadness, Disgust, Anger, Anticipation |
+| **Opposite Linkage** | Updating one emotion auto-affects its opposite (joy↔sadness, trust↔disgust) |
+| **OCEAN Personality** | Big Five traits drive baseline and decay rates |
+| **On-Demand Decay** | Computed only on read, minimal CPU overhead |
+| **Emotion Memory** | Power-law decay + recall reinforcement + salience weighting |
+| **Rumination Engine** | High-intensity events produce multi-round aftereffects |
+| **MCP Native** | FastMCP-based, supports OpenClaw dynamic injection |
+
 ### Installation
 
+Requires Rust (Cargo) and Python 3.10+.
+
 ```powershell
+# Option 1: Install from GitHub (recommended)
 pip install git+https://github.com/Michaol/emotion_system.git
 
-# Or local build
+# Option 2: Local build
+git clone https://github.com/Michaol/emotion_system.git
+cd emotion_system
 pip install maturin
 maturin develop --release
 ```
+
+### OpenClaw MCP Integration
+
+Configure the engine in OpenClaw's `mcp_config.json`.
+
+#### Option A: Per-Agent Isolation (Recommended)
+Assign a unique MCP server name and `EMOTION_AGENT_ID` for each agent.
+```json
+{
+  "mcpServers": {
+    "emotion-alice": {
+      "command": "emotion-mcp",
+      "env": { "EMOTION_AGENT_ID": "Alice", "EMOTION_STATE_DIR": "./state" }
+    },
+    "emotion-bob": {
+      "command": "emotion-mcp",
+      "env": { "EMOTION_AGENT_ID": "Bob", "EMOTION_STATE_DIR": "./state" }
+    }
+  }
+}
+```
+
+#### Option B: Shared Hub Mode
+Start a single server and pass `agent_id` dynamically via tools.
+```json
+{
+  "mcpServers": {
+    "emotion-hub": {
+      "command": "emotion-mcp",
+      "env": { "EMOTION_STATE_DIR": "./state" }
+    }
+  }
+}
+```
+
+#### Comparison
+
+| Dimension | **Option A: Per-Agent** | **Option B: Shared Hub** |
+| :--- | :--- | :--- |
+| **Isolation** | Process-level | Soft |
+| **Overhead** | ~50-100MB per agent | Single process |
+| **LLM Experience** | Auto-prefixed tools | Must fill ID correctly |
+| **Failure Impact** | Local | Global |
+| **Use Case** | VIP agents | Large-scale simulation |
+
+### Personality Management
+
+- **Create**: Write `config/{agent_id}.json` with OCEAN values (0.0~1.0)
+- **Modify**: Edit `config/{agent_id}.json` (initial) or `state/{agent_id}.json` (live state)
+- **Reset**: Call `reset` tool or delete `state/{agent_id}.json`
+- **Delete**: Remove both `config/` and `state/` JSON files
+
+### MCP API Reference
+
+#### Available Tools
+
+| Tool | Description | Parameters |
+| :--- | :--- | :--- |
+| `apply_emotion_event` | Apply an emotional event | `event_name`, `intensity`, `agent_id` |
+| `modify_emotion_dimension` | Directly calibrate a VAD dimension | `dimension` (v/a/d), `delta`, `agent_id` |
+| `reset_emotion_state` | Reset to OCEAN baseline | `agent_id` |
+| `reflect_emotion` | Force self-reflection | `agent_id` |
+| `dream_emotion` | Simulate subconscious perturbation | `agent_id` |
+| `evolve_personality` | Long-term personality drift | `agent_id` |
+
+#### Available Resources
+
+- `emotion://state/{agent_id}` — Real-time VAD + Plutchik classification (JSON)
+- `emotion://prompt/{agent_id}` — XML context with `<plutchik>` and `<memories>`
+- `emotion://personality/{agent_id}` — OCEAN five-dimension values
+- `emotion://reflect/{agent_id}` — Latest reflection text
 
 ### Web Dashboard
 
