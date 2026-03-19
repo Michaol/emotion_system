@@ -1,0 +1,12 @@
+[package]
+name = "emotion-python"
+version = "2.0.0"
+edition = "2021"
+
+[lib]
+name = "emotion_python"
+crate-type = ["cdylib"]
+
+[dependencies]
+emotion-core = { path = "../../core" }
+pyo3 = { version = "0.24", features = ["extension-module"] }

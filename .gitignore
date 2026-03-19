@@ -1,1 +1,13 @@
+# Build artifacts
+target/
 .worktrees/
+*.whl
+
+# OS files
+nul
+Thumbs.db
+Desktop.ini
+
+# IDE
+.vscode/
+.idea/

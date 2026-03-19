@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emotion Engine Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Outfit:wght@300;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="background-orbs">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
+
+    <main class="glass-container">
+        <header>
+            <h1>Emotion Engine <span>Dashboard</span></h1>
+            <div class="agent-badge" id="agent-id-display">Loading...</div>
+        </header>
+
+        <section class="main-stats">
+            <!-- VAD Gauges -->
+            <div class="card vad-gauges">
+                <h2>Current State (VAD)</h2>
+                <div class="gauges-container">
+                    <div class="gauge-box">
+                        <div class="gauge-ring" id="gauge-v" role="meter" aria-label="Valence" aria-valuenow="0" aria-valuemin="-1" aria-valuemax="1">
+                            <span class="value">0.00</span>
+                        </div>
+                        <span class="gauge-label">Valence</span>
+                    </div>
+                    <div class="gauge-box">
+                        <div class="gauge-ring" id="gauge-a" role="meter" aria-label="Arousal" aria-valuenow="0" aria-valuemin="-1" aria-valuemax="1">
+                            <span class="value">0.00</span>
+                        </div>
+                        <span class="gauge-label">Arousal</span>
+                    </div>
+                    <div class="gauge-box">
+                        <div class="gauge-ring" id="gauge-d" role="meter" aria-label="Dominance" aria-valuenow="0" aria-valuemin="-1" aria-valuemax="1">
+                            <span class="value">0.00</span>
+                        </div>
+                        <span class="gauge-label">Dominance</span>
+                    </div>
+                </div>
+                <div class="tone-display">
+                    Tone: <span id="tone-text">Neutral</span>
+                </div>
+            </div>
+
+            <!-- Personality Bars -->
+            <div class="card personality-card">
+                <h2>Personality (OCEAN)</h2>
+                <div class="trait-bars">
+                    <div class="trait">
+                        <span class="trait-label">Openness</span>
+                        <div class="progress-bg"><div class="progress-fill" id="trait-o"></div></div>
+                    </div>
+                    <div class="trait">
+                        <span class="trait-label">Conscientiousness</span>
+                        <div class="progress-bg"><div class="progress-fill" id="trait-c"></div></div>
+                    </div>
+                    <div class="trait">
+                        <span class="trait-label">Extraversion</span>
+                        <div class="progress-bg"><div class="progress-fill" id="trait-e"></div></div>
+                    </div>
+                    <div class="trait">
+                        <span class="trait-label">Agreeableness</span>
+                        <div class="progress-bg"><div class="progress-fill" id="trait-a"></div></div>
+                    </div>
+                    <div class="trait">
+                        <span class="trait-label">Neuroticism</span>
+                        <div class="progress-bg"><div class="progress-fill" id="trait-n"></div></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="lower-stats">
+            <!-- Controls -->
+            <div class="card controls-card">
+                <h2>Stimulus & Controls</h2>
+                <div class="input-group">
+                    <label for="event-name" class="sr-only">Event Name</label>
+                    <input type="text" id="event-name" placeholder="Event Name">
+                    <label for="event-intensity" class="sr-only">Intensity</label>
+                    <input type="number" id="event-intensity" step="0.1" min="0" max="1.0" value="0.5">
+                    <button id="btn-apply" class="btn-primary">Apply Event</button>
+                </div>
+                <div class="quick-actions">
+                    <button id="btn-reset" class="btn-secondary">Reset Baseline</button>
+                    <button id="btn-reflect" class="btn-reflect">Reflect</button>
+                    <button id="btn-dream" class="btn-dream">Dream</button>
+                    <button id="btn-evolve" class="btn-evolve">Evolve</button>
+                </div>
+            </div>
+
+            <!-- Reflection Area -->
+            <div class="card reflection-card">
+                <h2>Self-Reflection</h2>
+                <div id="reflection-text" class="reflection-box">
+                    No reflection yet...
+                </div>
+            </div>
+        </section>
+
+        <footer>
+            <div class="prompt-preview">
+                <h3>Prompt Snapshot</h3>
+                <pre id="prompt-content">&lt;emotion_state&gt;...&lt;/emotion_state&gt;</pre>
+            </div>
+        </section>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>

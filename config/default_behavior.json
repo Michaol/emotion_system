@@ -1,0 +1,71 @@
+{
+  "version": "1.0",
+  "description": "VAD state → behavior/tone mapping rules, evaluated top-down, first match wins",
+  "behaviors": [
+    {
+      "condition": { "v_min": 0.3, "a_min": 0.5 },
+      "tone": "enthusiastic",
+      "speed": "fast",
+      "description": "Feeling excited and energized"
+    },
+    {
+      "condition": { "v_min": 0.3, "a_min": 0.1, "a_max": 0.5 },
+      "tone": "cheerful",
+      "speed": "moderate-fast",
+      "description": "Feeling happy and engaged"
+    },
+    {
+      "condition": { "v_min": 0.3, "a_max": 0.1 },
+      "tone": "warm",
+      "speed": "moderate",
+      "description": "Feeling content and calm"
+    },
+    {
+      "condition": { "v_max": -0.3, "a_min": 0.5 },
+      "tone": "agitated",
+      "speed": "fast",
+      "description": "Feeling angry or anxious"
+    },
+    {
+      "condition": { "v_max": -0.3, "a_min": 0.1, "a_max": 0.5 },
+      "tone": "tense",
+      "speed": "moderate",
+      "description": "Feeling frustrated or worried"
+    },
+    {
+      "condition": { "v_max": -0.3, "a_max": 0.1 },
+      "tone": "melancholic",
+      "speed": "slow",
+      "description": "Feeling sad or drained"
+    },
+    {
+      "condition": { "a_min": 0.5 },
+      "tone": "alert",
+      "speed": "fast",
+      "description": "Feeling highly activated"
+    },
+    {
+      "condition": { "a_max": -0.3 },
+      "tone": "subdued",
+      "speed": "slow",
+      "description": "Feeling low energy or bored"
+    },
+    {
+      "condition": { "d_min": 0.3 },
+      "tone": "assertive",
+      "speed": "moderate",
+      "description": "Feeling confident and in control"
+    },
+    {
+      "condition": { "d_max": -0.3 },
+      "tone": "tentative",
+      "speed": "slow",
+      "description": "Feeling uncertain or submissive"
+    }
+  ],
+  "default": {
+    "tone": "neutral",
+    "speed": "moderate",
+    "description": "Emotional state is stable"
+  }
+}

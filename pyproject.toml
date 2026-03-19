@@ -1,0 +1,28 @@
+[build-system]
+requires = ["maturin>=1.0,<2.0"]
+build-backend = "maturin"
+
+[project]
+name = "emotion-engine"
+version = "2.0.0"
+description = "Emotion Engine — VAD-based emotional simulation for AI agents, exposed as MCP server"
+requires-python = ">=3.10"
+dependencies = [
+    "fastmcp>=2.0",
+    "fastapi>=0.100",
+    "uvicorn>=0.20",
+]
+
+[project.scripts]
+emotion-mcp = "emotion_engine.mcp_server:main"
+emotion-bridge = "emotion_engine.bridge:main"
+
+[tool.maturin]
+features = ["pyo3/extension-module"]
+python-source = "python"
+module-name = "emotion_engine._core"
+manifest-path = "bindings/python/Cargo.toml"
+include = [
+    { path = "python/emotion_engine/dashboard/*", format = "wheel" },
+    { path = "config/*.json", format = "wheel" }
+]

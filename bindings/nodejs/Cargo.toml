@@ -1,0 +1,15 @@
+[package]
+name = "emotion-nodejs"
+version = "2.0.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+emotion-core = { path = "../../core" }
+napi = { version = "2", features = ["default"] }
+napi-derive = "2"
+
+[build-dependencies]
+napi-build = "2"

@@ -1,0 +1,314 @@
+:root {
+    --glass-bg: rgba(255, 255, 255, 0.1);
+    --glass-accent: rgba(255, 255, 255, 0.2);
+    --primary: #4f46e5;
+    --secondary: #ec4899;
+    --accent: #06b6d4;
+    --text: #ffffff;
+    --text-muted: #cbd5e1;
+    --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    --shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    color: var(--text);
+    background: var(--bg-gradient);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow-x: hidden;
+}
+
+/* Background Orbs Animation */
+.background-orbs {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: -1;
+    filter: blur(80px);
+}
+
+.orb {
+    position: absolute;
+    border-radius: 50%;
+    opacity: 0.6;
+    animation: move 20s infinite alternate;
+}
+
+.orb-1 {
+    width: 400px;
+    height: 400px;
+    background: var(--primary);
+    top: -100px;
+    left: -100px;
+}
+
+.orb-2 {
+    width: 500px;
+    height: 500px;
+    background: var(--secondary);
+    bottom: -150px;
+    right: -100px;
+    animation-delay: -5s;
+}
+
+.orb-3 {
+    width: 300px;
+    height: 300px;
+    background: var(--accent);
+    top: 50%;
+    left: 40%;
+    animation-delay: -10s;
+}
+
+@keyframes move {
+    0% { transform: translate(0, 0) scale(1.0); }
+    100% { transform: translate(100px, 100px) scale(1.2); }
+}
+
+/* Container */
+.glass-container {
+    width: 90%;
+    max-width: 1200px;
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-accent);
+    border-radius: 24px;
+    padding: 3rem;
+    box-shadow: var(--shadow);
+}
+
+header {
+    margin-bottom: 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+h1 {
+    font-family: 'Outfit', sans-serif;
+    font-size: 2.5rem;
+    font-weight: 600;
+}
+
+h1 span {
+    color: var(--accent);
+    font-weight: 300;
+}
+
+.agent-badge {
+    background: var(--glass-accent);
+    padding: 0.5rem 1.5rem;
+    border-radius: 50px;
+    border: 1px solid var(--glass-accent);
+    font-family: 'Outfit', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+/* Cards */
+section {
+    display: grid;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.main-stats { grid-template-columns: 1.5fr 1fr; }
+.lower-stats { grid-template-columns: 1fr 1fr; }
+
+.card {
+    background: var(--glass-accent);
+    border: 1px solid var(--glass-accent);
+    border-radius: 16px;
+    padding: 1.5rem;
+    transition: transform 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+h2 {
+    font-size: 1.1rem;
+    margin-bottom: 1.5rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Gauges */
+.gauges-container {
+    display: flex;
+    justify-content: space-around;
+    gap: 2rem;
+}
+
+.gauge-box {
+    text-align: center;
+}
+
+.gauge-ring {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    border: 8px solid var(--glass-accent);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--accent);
+    position: relative;
+    /* Animated value background? Needs JS to draw */
+}
+
+.gauge-ring::before {
+    content: '';
+    position: absolute;
+    inset: -8px;
+    border-radius: 50%;
+    border: 8px solid currentColor;
+    border-bottom-color: transparent;
+    opacity: 0.3;
+}
+
+.gauge-box label {
+    display: block;
+    margin-top: 1rem;
+    font-weight: 400;
+    color: var(--text-muted);
+}
+
+.tone-display {
+    margin-top: 1.5rem;
+    text-align: center;
+    font-size: 1.2rem;
+    font-weight: 300;
+    color: var(--accent);
+}
+
+/* Personality Bars */
+.trait-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+}
+
+.trait label {
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+    display: block;
+    color: var(--text-muted);
+}
+
+.progress-bg {
+    width: 100%;
+    height: 8px;
+    background: var(--glass-accent);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    width: 50%;
+    background: linear-gradient(90deg, var(--primary), var(--secondary));
+    transition: width 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Controls */
+.input-group {
+    display: flex;
+    gap: 0.5rem;
+}
+
+input {
+    background: var(--glass-accent);
+    border: 1px solid var(--glass-accent);
+    padding: 0.8rem;
+    border-radius: 8px;
+    color: white;
+    font-family: inherit;
+}
+
+#event-name { flex-grow: 1; }
+#event-intensity { width: 80px; }
+
+.quick-actions {
+    margin-top: 1.5rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+}
+
+button {
+    padding: 0.8rem;
+    border-radius: 8px;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.85rem;
+}
+
+button:active { transform: scale(0.95); }
+
+.btn-primary { background: var(--primary); color: white; }
+.btn-secondary { background: var(--glass-accent); color: white; }
+.btn-reflect { background: var(--accent); color: white; }
+.btn-dream { background: #8b5cf6; color: white; }
+.btn-evolve { background: #10b981; color: white; }
+
+/* Reflection Area */
+.reflection-box {
+    background: rgba(0,0,0,0.2);
+    padding: 1rem;
+    border-radius: 8px;
+    height: 155px;
+    overflow-y: auto;
+    font-family: 'Outfit', monospace;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    border: 1px solid var(--glass-accent);
+}
+
+/* Prompt Preview */
+.prompt-preview {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--glass-accent);
+}
+
+#prompt-content {
+    background: rgba(0,0,0,0.3);
+    padding: 1rem;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    color: #00f2ff; /* 调亮对比度 */
+    overflow-x: auto;
+}
