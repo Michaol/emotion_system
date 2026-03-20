@@ -16,7 +16,7 @@ pub struct AgentSummary {
 
 /// 扫描指定目录下的 Agent 状态文件
 ///
-/// 约定：每个 Agent 的状态文件命名为 `<agent_id>_state.json`
+/// 约定：每个 Agent 的状态文件命名为 `<agent_id>.json`
 pub fn scan_other_agents(scan_dir: &str, exclude_self: &str) -> Vec<AgentSummary> {
     let dir = Path::new(scan_dir);
     if !dir.is_dir() {
@@ -29,11 +29,15 @@ pub fn scan_other_agents(scan_dir: &str, exclude_self: &str) -> Vec<AgentSummary
         for entry in entries.flatten() {
             let path = entry.path();
             if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
-                if !name.ends_with("_state.json") || path.to_str() == Some(exclude_self) {
+                if !name.ends_with(".json") || path.to_str() == Some(exclude_self) {
+                    continue;
+                }
+                // 跳过非状态文件 (如 default_*.json)
+                if name.starts_with("default_") {
                     continue;
                 }
 
-                let agent_id = name.trim_end_matches("_state.json").to_string();
+                let agent_id = name.trim_end_matches(".json").to_string();
 
                 if let Ok(content) = std::fs::read_to_string(&path) {
                     if let Ok(state) = serde_json::from_str::<EmotionState>(&content) {

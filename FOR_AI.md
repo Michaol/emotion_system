@@ -1,4 +1,4 @@
-# Emotion Engine 2.0.0 — AI Agent Reference
+# Emotion Engine 2.0.1 — AI Agent Reference
 
 > Rust-core VAD emotion engine. Plutchik 8 emotions. Memory coupling. MCP-native. OCEAN personality.
 
@@ -66,7 +66,7 @@ fastmcp run emotion_engine.mcp_server:mcp --transport sse --host 0.0.0.0 --port 
 **Workflow:**
 1. Agent starts → reads AGENTS.md → finds Session Startup rule
 2. Agent calls `Read MCP resource: emotion://state/Alice`
-3. Engine loads persisted state from `state/Alice_state.json`
+3. Engine loads persisted state from `state/Alice.json`
 4. Agent continues conversation with restored emotional context
 
 ## TOOLS

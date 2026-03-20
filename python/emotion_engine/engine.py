@@ -16,6 +16,7 @@ emotion_engine — 线程安全 & 协程安全的 Python 封装层
     dream  = engine.dream()         # 手动触发梦境
     drift  = engine.evolve()        # 手动触发人格漂移
 """
+
 from __future__ import annotations
 
 """
@@ -36,6 +37,7 @@ from emotion_engine._core import EmotionEngine as _RustEngine
 # ── 自动路径解析 ──────────────────────────
 _PACKAGE_ROOT = Path(__file__).resolve().parent
 
+
 def _find_default(name: str, rel_dev: str) -> str:
     """按优先级寻找目录：1. 环境变量 2. 包内资源 (site-packages) 3. 开发环境 (源码)"""
     # 1. 检查当前目录下 (比如被打包进 whl 的资源)
@@ -49,8 +51,13 @@ def _find_default(name: str, rel_dev: str) -> str:
     # 3. 如果都不存在，默认为预期开发路径，避免运行期 None 错误
     return str(_PACKAGE_ROOT.parents[1] / rel_dev)
 
-_DEFAULT_CONFIG_DIR = os.environ.get("EMOTION_CONFIG_DIR", _find_default("config", "config"))
-_DEFAULT_STATE_DIR = os.environ.get("EMOTION_STATE_DIR", _find_default("state", "state"))
+
+_DEFAULT_CONFIG_DIR = os.environ.get(
+    "EMOTION_CONFIG_DIR", _find_default("config", "config")
+)
+_DEFAULT_STATE_DIR = os.environ.get(
+    "EMOTION_STATE_DIR", _find_default("state", "state")
+)
 _DEFAULT_AGENT_ID = os.environ.get("EMOTION_AGENT_ID", "default")
 
 # ── 单例管理 ──────────────────────────────
@@ -62,19 +69,23 @@ _instances: dict[str, EngineWrapper] = {}
 # ── Dream 配置 ────────────────────────────
 
 _DREAM_THEMES = [
-    {"theme": "nostalgic_memory",  "v": -0.05, "a": -0.08, "d": -0.02},
-    {"theme": "hopeful_vision",    "v":  0.08, "a":  0.03, "d":  0.05},
-    {"theme": "anxious_replay",    "v": -0.06, "a":  0.10, "d": -0.08},
-    {"theme": "peaceful_scene",    "v":  0.06, "a": -0.10, "d":  0.03},
-    {"theme": "creative_spark",    "v":  0.04, "a":  0.06, "d":  0.02},
-    {"theme": "processing_grief",  "v": -0.08, "a": -0.05, "d": -0.05},
+    {"theme": "nostalgic_memory", "v": -0.05, "a": -0.08, "d": -0.02},
+    {"theme": "hopeful_vision", "v": 0.08, "a": 0.03, "d": 0.05},
+    {"theme": "anxious_replay", "v": -0.06, "a": 0.10, "d": -0.08},
+    {"theme": "peaceful_scene", "v": 0.06, "a": -0.10, "d": 0.03},
+    {"theme": "creative_spark", "v": 0.04, "a": 0.06, "d": 0.02},
+    {"theme": "processing_grief", "v": -0.08, "a": -0.05, "d": -0.05},
 ]
 
 # ── Evolve 配置 ───────────────────────────
 
 _DRIFT_MAP: dict[str, dict[str, float]] = {
-    "positive":     {"extraversion": +0.002, "agreeableness": +0.001, "neuroticism": -0.001},
-    "negative":     {"neuroticism": +0.002, "agreeableness": -0.001},
+    "positive": {
+        "extraversion": +0.002,
+        "agreeableness": +0.001,
+        "neuroticism": -0.001,
+    },
+    "negative": {"neuroticism": +0.002, "agreeableness": -0.001},
     "high_arousal": {"openness": +0.001, "neuroticism": +0.001},
     "high_dominance": {"conscientiousness": +0.001, "extraversion": +0.001},
 }
@@ -159,9 +170,13 @@ class EngineWrapper:
             self._maybe_save()
 
         # Evolve: 记录快照
-        self._evolve_history.append({
-            "v": result["v"], "a": result["a"], "d": result["d"],
-        })
+        self._evolve_history.append(
+            {
+                "v": result["v"],
+                "a": result["a"],
+                "d": result["d"],
+            }
+        )
         if len(self._evolve_history) > 100:
             self._evolve_history = self._evolve_history[-100:]
 
@@ -345,7 +360,9 @@ class EngineWrapper:
                 except Exception:
                     pass
 
-        self._decay_thread = threading.Thread(target=_loop, daemon=True, name="emotion-decay")
+        self._decay_thread = threading.Thread(
+            target=_loop, daemon=True, name="emotion-decay"
+        )
         self._decay_thread.start()
 
     def stop_decay_loop(self) -> None:
@@ -389,8 +406,7 @@ def get_engine(
         with _lock:
             if aid not in _instances:
                 os.makedirs(sdir, exist_ok=True)
-                state_path = os.path.join(sdir, f"{aid}_state.json")
+                state_path = os.path.join(sdir, f"{aid}.json")
                 _instances[aid] = EngineWrapper(aid, cdir, state_path)
 
     return _instances[aid]
-
