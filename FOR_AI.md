@@ -1,4 +1,4 @@
-# Emotion Engine 2.0.2 — AI Agent Reference
+# Emotion Engine 2.2.0 — AI Agent Reference
 
 > Rust-core VAD emotion engine. Plutchik 8 emotions. Memory coupling. MCP-native. OCEAN personality.
 
@@ -87,7 +87,7 @@ All accept optional `agent_id` (default: env `EMOTION_AGENT_ID`).
 | uri | returns |
 |---|---|
 | `emotion://state/{agent_id}` | VAD + Plutchik label/confidence + memories (JSON) |
-| `emotion://prompt/{agent_id}` | XML with `<plutchik>`, `<memories>`, `<dimensions>`, `<tone>` |
+| `emotion://prompt/{agent_id}` | XML with `<plutchik>`, `<memories>`, `<time_phase>`, `<dimensions>`, `<tone>` |
 | `emotion://personality/{agent_id}` | OCEAN values (JSON) |
 | `emotion://reflect/{agent_id}` | Latest reflection text |
 
@@ -99,14 +99,18 @@ All accept optional `agent_id` (default: env `EMOTION_AGENT_ID`).
 
 **Memory**: Events stored with VAD tag. Decay via power law. Frequent recall strengthens memory. Low-retention entries auto-GC'd.
 
+**Day/Night Decay** (v2.2.0): Decay rate varies by system time (UTC+8). Daytime (08:00-24:00): normal rate. Nighttime (00:00-08:00): Arousal ×3 faster (sleep consolidation), Valence ×1.5, Dominance ×0.5. Cross-period decay auto-splits into segments.
+
 ## PERSONALITY (OCEAN)
 
 `openness`, `conscientiousness`, `extraversion`, `agreeableness`, `neuroticism` — float 0.0~1.0
 
 ```
-config/<agent_id>.json   → template (used only if no state file)
+config/<agent_id>.json   → template (loaded on every init if state personality is default 0.5)
 state/<agent_id>.json    → live state (auto-generated, editable)
 ```
+
+**Config-as-Fallback** (v2.2.0): If state personality is all 0.5 (never configured), config overrides it. If state has drifted values (from `evolve()`), drift is preserved across restarts.
 
 Example: `config/alice.json`
 ```json

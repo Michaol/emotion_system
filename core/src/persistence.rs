@@ -37,7 +37,11 @@ pub fn load_state(engine: &mut Engine) -> Result<(), ConfigError> {
 }
 
 /// 仅在脏且距上次保存超过最小间隔时保存
-pub fn maybe_save(engine: &mut Engine, last_save_ms: &mut i64, min_interval_ms: i64) -> Result<bool, ConfigError> {
+pub fn maybe_save(
+    engine: &mut Engine,
+    last_save_ms: &mut i64,
+    min_interval_ms: i64,
+) -> Result<bool, ConfigError> {
     if !engine.dirty {
         return Ok(false);
     }
@@ -57,7 +61,8 @@ mod tests {
     #[test]
     fn test_save_and_load_roundtrip() {
         let dir = tempfile::tempdir().unwrap();
-        let events = r#"{"version":"1.0","events":{"joy":{"delta_v":0.4,"delta_a":0.2,"delta_d":0.1}}}"#;
+        let events =
+            r#"{"version":"1.0","events":{"joy":{"delta_v":0.4,"delta_a":0.2,"delta_d":0.1}}}"#;
         let behaviors = r#"{"version":"1.0","behaviors":[],"default":{"tone":"neutral","speed":"moderate","description":"stable"}}"#;
         std::fs::write(dir.path().join("default_events.json"), events).unwrap();
         std::fs::write(dir.path().join("default_behavior.json"), behaviors).unwrap();

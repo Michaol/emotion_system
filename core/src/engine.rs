@@ -3,9 +3,10 @@ use std::path::Path;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::config::{BehaviorConfig, ConfigError, EventConfig};
-use crate::decay::{apply_decay, ms_to_hours};
+use crate::decay::{ms_to_hours, split_decay};
+use crate::decay_schedule::DecaySchedule;
 use crate::memory::EmotionalMemory;
-use crate::personality::{compute_baseline, DecayRates, OceanProfile};
+use crate::personality::{compute_baseline, is_default_personality, DecayRates, OceanProfile};
 use crate::plutchik::{self, PlutchikResult, PlutchikState};
 use crate::rumination::{
     add_rumination, advance_ruminations, should_ruminate, RuminationEntry, RUMINATION_THRESHOLD,
@@ -48,6 +49,8 @@ pub struct EmotionState {
     pub plutchik: PlutchikState,
     #[serde(default)]
     pub memories: Vec<EmotionalMemory>,
+    #[serde(default)]
+    pub decay_schedule: DecaySchedule,
 }
 
 impl Default for EmotionState {
@@ -65,6 +68,7 @@ impl Default for EmotionState {
             last_updated_ms: now_ms(),
             plutchik: PlutchikState::default(),
             memories: Vec::new(),
+            decay_schedule: DecaySchedule::default(),
         }
     }
 }
@@ -115,34 +119,38 @@ impl Engine {
             EmotionState::default()
         };
 
-        // 始终从 agent config 加载 OCEAN 人格（config 是权威来源）
-        // 如果 state 文件已存在，config 值覆盖持久化值
-        if let Some(aid) = agent_id {
-            let agent_config_path = config_dir.join(format!("{aid}.json"));
-            if agent_config_path.exists() {
-                if let Ok(content) = std::fs::read_to_string(&agent_config_path) {
-                    match serde_json::from_str::<AgentConfig>(&content) {
-                        Ok(agent_cfg) => {
-                            if let Some(personality) = agent_cfg.personality {
-                                state.baseline = compute_baseline(&personality);
-                                state.decay_rates = DecayRates::from_personality(&personality);
-                                state.personality = personality;
+        // Option B: 仅当 state 中的人格仍为默认值 (0.5) 时从 config 加载
+        // - state 为 0.5 → 从未加载过 config 或 bug 导致 → 从 config 加载
+        // - state 已漂移 → 保留漂移值，不覆盖
+        // - state 文件不存在 → 已在上面用 default 创建，人格为 0.5 → 从 config 加载
+        if is_default_personality(&state.personality) {
+            if let Some(aid) = agent_id {
+                let agent_config_path = config_dir.join(format!("{aid}.json"));
+                if agent_config_path.exists() {
+                    if let Ok(content) = std::fs::read_to_string(&agent_config_path) {
+                        match serde_json::from_str::<AgentConfig>(&content) {
+                            Ok(agent_cfg) => {
+                                if let Some(personality) = agent_cfg.personality {
+                                    state.baseline = compute_baseline(&personality);
+                                    state.decay_rates = DecayRates::from_personality(&personality);
+                                    state.personality = personality;
+                                }
+                            }
+                            Err(e) => {
+                                eprintln!(
+                                    "[emotion-engine] Error: failed to parse agent config '{}': {}",
+                                    agent_config_path.display(),
+                                    e
+                                );
                             }
                         }
-                        Err(e) => {
-                            eprintln!(
-                                "[emotion-engine] Error: failed to parse agent config '{}': {}",
-                                agent_config_path.display(),
-                                e
-                            );
-                        }
                     }
+                } else if aid != "default" {
+                    eprintln!(
+                        "[emotion-engine] Debug: agent config file not found: {}",
+                        agent_config_path.display()
+                    );
                 }
-            } else if aid != "default" {
-                eprintln!(
-                    "[emotion-engine] Debug: agent config file not found: {}",
-                    agent_config_path.display()
-                );
             }
         }
 
@@ -155,31 +163,41 @@ impl Engine {
         })
     }
 
-    /// 应用按需衰减
+    /// 应用按需衰减 (含昼夜分段)
     fn apply_decay_to_current(&mut self) {
         let now = now_ms();
-        let delta_hours = ms_to_hours(now - self.state.last_updated_ms);
+        let last = self.state.last_updated_ms;
+        let delta_hours = ms_to_hours(now - last);
         if delta_hours <= 0.0 {
             return;
         }
 
-        self.state.current.v = apply_decay(
+        self.state.current.v = split_decay(
             self.state.current.v,
             self.state.baseline.v,
             self.state.decay_rates.v_rate,
-            delta_hours,
+            last,
+            now,
+            "v",
+            &self.state.decay_schedule,
         );
-        self.state.current.a = apply_decay(
+        self.state.current.a = split_decay(
             self.state.current.a,
             self.state.baseline.a,
             self.state.decay_rates.a_rate,
-            delta_hours,
+            last,
+            now,
+            "a",
+            &self.state.decay_schedule,
         );
-        self.state.current.d = apply_decay(
+        self.state.current.d = split_decay(
             self.state.current.d,
             self.state.baseline.d,
             self.state.decay_rates.d_rate,
-            delta_hours,
+            last,
+            now,
+            "d",
+            &self.state.decay_schedule,
         );
 
         // 随着时间推进反刍（余波累加）
@@ -493,5 +511,66 @@ mod tests {
         assert!((p.openness - 0.75).abs() < 0.01);
         assert!((p.conscientiousness - 0.95).abs() < 0.01);
         assert!((p.neuroticism - 0.35).abs() < 0.01);
+    }
+
+    #[test]
+    fn test_option_b_drifted_personality_preserved() {
+        let (dir, state_path) = create_test_env();
+        let agent_json = r#"{
+            "personality": {
+                "openness": 0.70,
+                "conscientiousness": 0.95,
+                "extraversion": 0.80,
+                "agreeableness": 0.75,
+                "neuroticism": 0.25
+            }
+        }"#;
+        std::fs::write(dir.path().join("asuna.json"), agent_json).unwrap();
+
+        // 首次创建：从 config 加载
+        let mut engine =
+            Engine::new(dir.path().to_str().unwrap(), &state_path, Some("asuna")).unwrap();
+        assert!((engine.get_personality().openness - 0.70).abs() < 0.01);
+
+        // 模拟 drift：修改 personality 并保存
+        engine.state.personality.openness = 0.705; // 微小漂移
+        crate::persistence::save_state(&mut engine).unwrap();
+
+        // 重启：state 中 personality 不是 0.5 → Option B 应保留漂移值
+        let engine2 =
+            Engine::new(dir.path().to_str().unwrap(), &state_path, Some("asuna")).unwrap();
+        assert!(
+            (engine2.get_personality().openness - 0.705).abs() < 0.01,
+            "Drifted openness should be preserved, got {}",
+            engine2.get_personality().openness
+        );
+    }
+
+    #[test]
+    fn test_option_b_default_personality_overridden() {
+        let (dir, state_path) = create_test_env();
+        let agent_json = r#"{
+            "personality": {
+                "openness": 0.85,
+                "conscientiousness": 0.60,
+                "extraversion": 0.90,
+                "agreeableness": 0.75,
+                "neuroticism": 0.25
+            }
+        }"#;
+        std::fs::write(dir.path().join("asuna.json"), agent_json).unwrap();
+
+        // 创建 state 文件但 personality 为 0.5（模拟 bug 场景）
+        let default_state = EmotionState::default();
+        let json = serde_json::to_string(&default_state).unwrap();
+        std::fs::write(&state_path, json).unwrap();
+
+        // 重启：state 中 personality 为 0.5 → Option B 应从 config 加载
+        let engine = Engine::new(dir.path().to_str().unwrap(), &state_path, Some("asuna")).unwrap();
+        assert!(
+            (engine.get_personality().openness - 0.85).abs() < 0.01,
+            "Default 0.5 should be overridden by config, got {}",
+            engine.get_personality().openness
+        );
     }
 }

@@ -1,7 +1,8 @@
-use crate::engine::Engine;
+use crate::engine::{now_ms, Engine};
 
 /// 将当前情绪状态格式化为 `<emotion_state>` XML 块
 pub fn format_emotion_prompt(engine: &mut Engine) -> String {
+    let now = now_ms();
     let snap = engine.get_state();
     let state = &engine.state;
 
@@ -33,6 +34,10 @@ pub fn format_emotion_prompt(engine: &mut Engine) -> String {
 
     // tone
     xml.push_str(&format!("  <tone>{}</tone>\n", snap.tone));
+
+    // time_phase (daytime/sleeping)
+    let phase = state.decay_schedule.time_phase_label(now);
+    xml.push_str(&format!("  <time_phase>{phase}</time_phase>\n"));
 
     // plutchik
     xml.push_str(&format!(
@@ -152,5 +157,32 @@ mod tests {
 
         assert!(xml.contains("label="));
         assert!(xml.contains("confidence="));
+    }
+
+    #[test]
+    fn test_format_includes_time_phase() {
+        let dir = tempfile::tempdir().unwrap();
+        let events =
+            r#"{"version":"1.0","events":{"joy":{"delta_v":0.4,"delta_a":0.2,"delta_d":0.1}}}"#;
+        let behaviors = r#"{"version":"1.0","behaviors":[],"default":{"tone":"neutral","speed":"moderate","description":"stable"}}"#;
+        std::fs::write(dir.path().join("default_events.json"), events).unwrap();
+        std::fs::write(dir.path().join("default_behavior.json"), behaviors).unwrap();
+
+        let state_path = dir.path().join("test.json");
+        let mut engine = Engine::new(
+            dir.path().to_str().unwrap(),
+            state_path.to_str().unwrap(),
+            None,
+        )
+        .unwrap();
+
+        engine.apply_event("joy", 1.0).unwrap();
+        let xml = format_emotion_prompt(&mut engine);
+
+        assert!(xml.contains("<time_phase>"));
+        assert!(
+            xml.contains("<time_phase>daytime</time_phase>")
+                || xml.contains("<time_phase>sleeping</time_phase>")
+        );
     }
 }

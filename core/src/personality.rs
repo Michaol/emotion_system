@@ -12,6 +12,20 @@ pub struct OceanProfile {
     pub neuroticism: f32,
 }
 
+/// 检查人格是否全部为默认值 (0.5)
+///
+/// 用于判断 state 文件是由 EmotionState::default() 创建且从未加载过 config。
+/// 浮点容差 ±0.001。
+#[must_use]
+pub fn is_default_personality(p: &OceanProfile) -> bool {
+    const EPS: f32 = 0.001;
+    (p.openness - 0.5).abs() < EPS
+        && (p.conscientiousness - 0.5).abs() < EPS
+        && (p.extraversion - 0.5).abs() < EPS
+        && (p.agreeableness - 0.5).abs() < EPS
+        && (p.neuroticism - 0.5).abs() < EPS
+}
+
 impl OceanProfile {
     /// 创建并 clamp 到 [0.0, 1.0]
     #[must_use]
@@ -86,14 +100,11 @@ impl Default for DecayRates {
 /// 基于人格计算 V/A/D baseline 偏移
 #[must_use]
 pub fn compute_baseline(p: &OceanProfile) -> crate::vad::VadState {
-    let v = 0.1 * (p.extraversion - 0.5)
-        + 0.1 * (p.agreeableness - 0.5)
+    let v = 0.1 * (p.extraversion - 0.5) + 0.1 * (p.agreeableness - 0.5)
         - 0.15 * (p.neuroticism - 0.5)
         + 0.05 * (p.openness - 0.5);
 
-    let a = 0.15 * (p.extraversion - 0.5)
-        + 0.1 * (p.neuroticism - 0.5)
-        + 0.05 * (p.openness - 0.5)
+    let a = 0.15 * (p.extraversion - 0.5) + 0.1 * (p.neuroticism - 0.5) + 0.05 * (p.openness - 0.5)
         - 0.05 * (p.conscientiousness - 0.5);
 
     let d = 0.05 * (p.extraversion - 0.5)
@@ -153,5 +164,33 @@ mod tests {
         let dr_high = DecayRates::from_personality(&high_n);
         // 高神经质 → v_rate 更低 (衰减更慢)
         assert!(dr_high.v_rate < dr_low.v_rate);
+    }
+
+    #[test]
+    fn test_is_default_personality_true() {
+        let p = OceanProfile::default(); // all 0.5
+        assert!(is_default_personality(&p));
+    }
+
+    #[test]
+    fn test_is_default_personality_false() {
+        let p = OceanProfile::new(0.7, 0.5, 0.5, 0.5, 0.5);
+        assert!(!is_default_personality(&p));
+    }
+
+    #[test]
+    fn test_is_default_personality_drifted() {
+        // 模拟微小漂移 (evolve 每次 ±0.005)
+        let mut p = OceanProfile::default();
+        p.openness = 0.503;
+        assert!(!is_default_personality(&p));
+    }
+
+    #[test]
+    fn test_is_default_personality_within_tolerance() {
+        // 在容差范围内 (±0.001)
+        let mut p = OceanProfile::default();
+        p.openness = 0.5005;
+        assert!(is_default_personality(&p));
     }
 }

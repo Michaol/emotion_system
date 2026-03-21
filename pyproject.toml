@@ -4,7 +4,7 @@ build-backend = "maturin"
 
 [project]
 name = "emotion-engine"
-version = "2.0.2"
+version = "2.2.0"
 description = "Emotion Engine — VAD-based emotional simulation for AI agents, exposed as MCP server"
 requires-python = ">=3.10"
 dependencies = [

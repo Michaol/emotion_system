@@ -133,7 +133,11 @@ impl BehaviorConfig {
                 return (&rule.tone, &rule.speed, &rule.description);
             }
         }
-        (&self.default.tone, &self.default.speed, &self.default.description)
+        (
+            &self.default.tone,
+            &self.default.speed,
+            &self.default.description,
+        )
     }
 }
 

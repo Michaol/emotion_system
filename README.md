@@ -1,4 +1,4 @@
-# Emotion Engine 2.0.2
+# Emotion Engine 2.2.0
 
 [中文](#中文) | [English](#english) | [🤖 For AI Agents](FOR_AI.md)
 
@@ -21,6 +21,13 @@
 - **语义丰富 Prompt**: XML 输出新增 `<plutchik>` 和 `<memories>` 节点，为 LLM 提供更丰富的情绪上下文。
 - **零新增依赖**: 所有新功能基于已有 serde/std 库实现，无额外外部依赖。
 
+### v2.2.0 新特性
+
+- **昼夜情绪衰减系统**: 基于系统时间的差异化衰减。日间 (08:00-24:00) 正常衰减; 夜间 (00:00-08:00) Arousal ×3 加速回归（模拟睡眠平复），Valence ×1.5，Dominance ×0.5。
+- **跨时段分段衰减**: 跨越昼夜边界时自动分段计算，如 22:00→次日 10:00 自动拆分为 2h 日间 + 8h 夜间 + 2h 日间。
+- **Prompt `<time_phase>` 标注**: XML 输出新增 `<time_phase>daytime/sleeping</time_phase>` 节点，LLM 可据此调整语气。
+- **OCEAN 人格 Config-as-Fallback**: 仅当 state 中人格为默认值 (0.5) 时从 config 加载，已漂移的人格在重启后保留。
+
 ### 核心特性
 
 | 特性 | 说明 |
@@ -30,6 +37,7 @@
 | **对立情绪联动** | 更新一种情绪时自动影响其对立面 (如 喜↔哀, 信↔厌) |
 | **OCEAN 人格驱动** | 大五人格特质决定情绪基线和衰减率 |
 | **按需衰减** | 仅在读取时计算，极低 CPU 占用 |
+| **昼夜衰减** | 日间 (08:00-24:00) 正常衰减; 夜间 (00:00-08:00) Arousal ×3 加速回归，Dominance ×0.5 减缓 |
 | **情感记忆** | 幂律衰减 + 召回强化 + 显著性加权 |
 | **反刍引擎** | 高强度事件产生多轮余波效应 |
 | **MCP 原生** | FastMCP 实现，支持 OpenClaw 动态注入 |
@@ -140,6 +148,13 @@ A high-performance emotion simulation engine with a **Rust core**. Implements **
 - **KNN Classifier**: K-Nearest Neighbors mapping from VAD coordinates to Plutchik labels with confidence scores.
 - **Emotion-Memory Coupling**: Events stored with emotion tags, power-law decay, recall reinforcement, cosine-similarity retrieval.
 - **Rich Prompt XML**: New `<plutchik>` and `<memories>` nodes for LLM context enrichment.
+
+### v2.2.0 Highlights
+
+- **Day/Night Decay**: Time-based differential decay. Daytime (08:00-24:00) normal; Nighttime (00:00-08:00) Arousal ×3 (sleep consolidation), Valence ×1.5, Dominance ×0.5.
+- **Cross-Period Split Decay**: Automatically splits decay across day/night boundaries (e.g., 22:00→10:00 = 2h day + 8h night + 2h day).
+- **Prompt `<time_phase>`**: New `<time_phase>daytime/sleeping</time_phase>` XML node for LLM context.
+- **Config-as-Fallback Personality**: OCEAN loaded from config only when state has defaults (0.5); drifted personality preserved across restarts.
 
 ### Key Features
 
