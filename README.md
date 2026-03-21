@@ -1,4 +1,4 @@
-# Emotion Engine 2.0.1
+# Emotion Engine 2.0.2
 
 [中文](#中文) | [English](#english) | [🤖 For AI Agents](FOR_AI.md)
 

@@ -115,37 +115,34 @@ impl Engine {
             EmotionState::default()
         };
 
-        // BUG-L2: 仅在首次初始化（state 文件不存在）时从 agent config 加载 OCEAN 人格
-        // 如果 state 文件已存在，说明人格可能已被 drift/set_personality 修改过，应尊重持久化值
-        if !state_exists {
-            if let Some(aid) = agent_id {
-                let agent_config_path = config_dir.join(format!("{aid}.json"));
-                if agent_config_path.exists() {
-                    if let Ok(content) = std::fs::read_to_string(&agent_config_path) {
-                        match serde_json::from_str::<AgentConfig>(&content) {
-                            Ok(agent_cfg) => {
-                                if let Some(personality) = agent_cfg.personality {
-                                    state.baseline = compute_baseline(&personality);
-                                    state.decay_rates = DecayRates::from_personality(&personality);
-                                    state.personality = personality;
-                                }
-                            }
-                            Err(e) => {
-                                eprintln!(
-                                    "[emotion-engine] Error: failed to parse agent config '{}': {}",
-                                    agent_config_path.display(),
-                                    e
-                                );
+        // 始终从 agent config 加载 OCEAN 人格（config 是权威来源）
+        // 如果 state 文件已存在，config 值覆盖持久化值
+        if let Some(aid) = agent_id {
+            let agent_config_path = config_dir.join(format!("{aid}.json"));
+            if agent_config_path.exists() {
+                if let Ok(content) = std::fs::read_to_string(&agent_config_path) {
+                    match serde_json::from_str::<AgentConfig>(&content) {
+                        Ok(agent_cfg) => {
+                            if let Some(personality) = agent_cfg.personality {
+                                state.baseline = compute_baseline(&personality);
+                                state.decay_rates = DecayRates::from_personality(&personality);
+                                state.personality = personality;
                             }
                         }
+                        Err(e) => {
+                            eprintln!(
+                                "[emotion-engine] Error: failed to parse agent config '{}': {}",
+                                agent_config_path.display(),
+                                e
+                            );
+                        }
                     }
-                } else if aid != "default" {
-                    // 如果 aid 是默认值，没找到文件正常；如果是特定 aid（如 asuna）没找到则建议打印日志
-                    eprintln!(
-                        "[emotion-engine] Debug: agent config file not found: {}",
-                        agent_config_path.display()
-                    );
                 }
+            } else if aid != "default" {
+                eprintln!(
+                    "[emotion-engine] Debug: agent config file not found: {}",
+                    agent_config_path.display()
+                );
             }
         }
 

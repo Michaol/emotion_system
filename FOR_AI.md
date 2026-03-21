@@ -1,4 +1,4 @@
-# Emotion Engine 2.0.1 — AI Agent Reference
+# Emotion Engine 2.0.2 — AI Agent Reference
 
 > Rust-core VAD emotion engine. Plutchik 8 emotions. Memory coupling. MCP-native. OCEAN personality.
 
