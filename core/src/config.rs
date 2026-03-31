@@ -114,15 +114,22 @@ impl BehaviorConfig {
     }
 
     /// 匹配 VAD 到行为 (第一个命中的规则)
+    ///
+    /// 注意：此函数返回匹配规则的 BehaviorOutput。由于 Rust 借用检查器限制，
+    /// 无法直接返回 &BehaviorOutput（规则是 Vec 中的独立字段）。
+    /// 如需零拷贝，请使用 resolve() 返回 &str 元组。
     #[must_use]
-    pub fn match_behavior(&self, v: f32, a: f32, d: f32) -> &BehaviorOutput {
+    pub fn match_behavior(&self, v: f32, a: f32, d: f32) -> BehaviorOutput {
         for rule in &self.behaviors {
             if rule.condition.matches(v, a, d) {
-                // 直接构造引用不可行，返回 default 层级的引用
-                return &self.default; // placeholder，下面用更好的方式
+                return BehaviorOutput {
+                    tone: rule.tone.clone(),
+                    speed: rule.speed.clone(),
+                    description: rule.description.clone(),
+                };
             }
         }
-        &self.default
+        self.default.clone()
     }
 
     /// 匹配 VAD 到行为描述 (返回 tone, speed, description)
@@ -178,5 +185,36 @@ mod tests {
             events: HashMap::new(),
         };
         assert!(config.get_delta("nonexistent").is_err());
+    }
+
+    #[test]
+    fn test_match_behavior_returns_matched_rule() {
+        let config = BehaviorConfig {
+            version: "1.0".to_string(),
+            behaviors: vec![BehaviorRule {
+                condition: BehaviorCondition {
+                    v_min: Some(0.3),
+                    a_min: Some(0.5),
+                    ..Default::default()
+                },
+                tone: "excited".to_string(),
+                speed: "fast".to_string(),
+                description: "High energy".to_string(),
+            }],
+            default: BehaviorOutput {
+                tone: "neutral".to_string(),
+                speed: "moderate".to_string(),
+                description: "Stable".to_string(),
+            },
+        };
+
+        // VAD matches the rule → should return rule's output
+        let result = config.match_behavior(0.5, 0.6, 0.0);
+        assert_eq!(result.tone, "excited");
+        assert_eq!(result.speed, "fast");
+
+        // VAD doesn't match → should return default
+        let result2 = config.match_behavior(0.0, 0.1, 0.0);
+        assert_eq!(result2.tone, "neutral");
     }
 }

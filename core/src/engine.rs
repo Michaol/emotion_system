@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use std::collections::VecDeque;
 use std::path::Path;
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -43,7 +44,7 @@ pub struct EmotionState {
     pub personality: OceanProfile,
     pub decay_rates: DecayRates,
     pub ruminations: Vec<RuminationEntry>,
-    pub stimuli_history: Vec<StimulusRecord>,
+    pub stimuli_history: VecDeque<StimulusRecord>,
     pub last_updated_ms: i64,
     #[serde(default)]
     pub plutchik: PlutchikState,
@@ -64,7 +65,7 @@ impl Default for EmotionState {
             personality,
             decay_rates,
             ruminations: Vec::new(),
-            stimuli_history: Vec::new(),
+            stimuli_history: VecDeque::new(),
             last_updated_ms: now_ms(),
             plutchik: PlutchikState::default(),
             memories: Vec::new(),
@@ -240,22 +241,10 @@ impl Engine {
         }
     }
 
-    /// 查找与当前状态最接近的事件标签
+    /// 查找与当前状态最接近的情绪标签 (使用 Plutchik 分类)
     fn find_dominant_emotion(&self) -> String {
-        let cur = &self.state.current;
-        let mut best_name = "neutral".to_string();
-        let mut best_dist = f32::MAX;
-
-        for (name, delta) in &self.event_config.events {
-            let dist = (cur.v - delta.delta_v).powi(2)
-                + (cur.a - delta.delta_a).powi(2)
-                + (cur.d - delta.delta_d).powi(2);
-            if dist < best_dist {
-                best_dist = dist;
-                best_name = name.clone();
-            }
-        }
-        best_name
+        let plutchik_result = plutchik::classify_plutchik(&self.state.current, 3);
+        plutchik_result.label
     }
 
     /// 应用事件 — 未知事件不再崩溃，返回当前快照并打印警告
@@ -310,18 +299,20 @@ impl Engine {
         let mem = EmotionalMemory::new(name.to_string(), vad_before, scaled.clone(), now);
         self.state.memories.push(mem);
         if self.state.memories.len() > 100 {
-            self.state.memories.remove(0);
+            self.state
+                .memories
+                .drain(0..self.state.memories.len() - 100);
         }
 
         // 记录刺激历史 (保留最近 20 条)
-        self.state.stimuli_history.push(StimulusRecord {
+        self.state.stimuli_history.push_back(StimulusRecord {
             event_name: name.to_string(),
             delta: scaled,
             timestamp_ms: now,
             triggered_rumination: triggered,
         });
         if self.state.stimuli_history.len() > 20 {
-            self.state.stimuli_history.remove(0);
+            self.state.stimuli_history.pop_front();
         }
 
         self.state.last_updated_ms = now;
@@ -406,12 +397,17 @@ impl Engine {
 }
 
 /// 获取当前 Unix 时间戳 (毫秒)
+///
+/// 如果系统时间异常 (早于 UNIX_EPOCH)，返回 0 并打印警告。
 #[must_use]
 pub fn now_ms() -> i64 {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .map(|d| d.as_millis() as i64)
-        .unwrap_or(0)
+        .unwrap_or_else(|e| {
+            eprintln!("[emotion-engine] Warning: system time before UNIX_EPOCH: {e}");
+            0
+        })
 }
 
 #[cfg(test)]

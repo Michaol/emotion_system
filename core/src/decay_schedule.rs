@@ -59,10 +59,18 @@ impl Default for DecaySchedule {
 
 impl DecaySchedule {
     /// 根据时间戳(ms)判断是否为夜间
+    ///
+    /// 支持跨午夜配置 (如 night_start=22, day_start=6)。
     #[must_use]
     pub fn is_night(&self, timestamp_ms: i64) -> bool {
         let hour = self.local_hour(timestamp_ms);
-        hour >= self.night_start_hour && hour < self.day_start_hour
+        if self.night_start_hour < self.day_start_hour {
+            // 正常: night 0..day_start (如 0..8)
+            hour < self.day_start_hour
+        } else {
+            // 跨午夜: night [night_start..24) ∪ [0..day_start)
+            hour >= self.night_start_hour || hour < self.day_start_hour
+        }
     }
 
     /// 返回本地小时 (0-23)
@@ -190,5 +198,26 @@ mod tests {
     fn test_time_phase_label_daytime() {
         let s = DecaySchedule::default();
         assert_eq!(s.time_phase_label(MIDDAY_UTC_MS), "daytime");
+    }
+
+    #[test]
+    fn test_is_night_cross_midnight_config() {
+        // 跨午夜配置: night 22:00-06:00
+        let s = DecaySchedule {
+            night_start_hour: 22,
+            day_start_hour: 6,
+            ..DecaySchedule::default()
+        };
+        // UTC 16:00 = 00:00 local → should be night (>= 22)
+        let ts_night = 1_774_101_600_000;
+        assert!(s.is_night(ts_night), "00:00 local should be night");
+
+        // UTC 00:00 = 08:00 local → should be day
+        let ts_day = 1_774_051_200_000;
+        assert!(!s.is_night(ts_day), "08:00 local should be day");
+
+        // UTC 20:00 = 04:00 local → should be night (before 06:00)
+        let ts_early = 1_774_116_000_000;
+        assert!(s.is_night(ts_early), "04:00 local should be night");
     }
 }

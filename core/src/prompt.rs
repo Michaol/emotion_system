@@ -95,9 +95,10 @@ pub fn format_emotion_prompt(engine: &mut Engine) -> String {
     xml
 }
 
-/// 简单的时间戳格式化 (UTC)
+/// 简单的时间戳格式化 (UTC+8)
 fn format_timestamp(ms: i64) -> String {
-    let secs = ms / 1000;
+    // UTC 时间戳 + 8 小时偏移
+    let secs = ms / 1000 + 8 * 3600;
     let hours = (secs / 3600) % 24;
     let mins = (secs / 60) % 60;
     format!("{hours:02}:{mins:02}")

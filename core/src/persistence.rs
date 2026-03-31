@@ -9,7 +9,7 @@ pub fn save_state(engine: &mut Engine) -> Result<(), ConfigError> {
     if let Some(parent) = Path::new(&engine.state_path).parent() {
         std::fs::create_dir_all(parent)?;
     }
-    let json = serde_json::to_string_pretty(&engine.state)?;
+    let json = serde_json::to_string(&engine.state)?;
     let tmp_path = format!("{}.tmp", engine.state_path);
     std::fs::write(&tmp_path, &json)?;
     std::fs::rename(&tmp_path, &engine.state_path)?;

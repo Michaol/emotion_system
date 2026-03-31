@@ -17,14 +17,6 @@ emotion_engine — 线程安全 & 协程安全的 Python 封装层
     drift  = engine.evolve()        # 手动触发人格漂移
 """
 
-from __future__ import annotations
-
-"""
-# Copyright (c) 2026-present Michaol (https://github.com/Michaol)
-# Part of Emotion Engine - VAD-based emotional simulation for AI Agents.
-# Licensed under CC BY-NC 4.0 (Attribution-NonCommercial 4.0 International).
-"""
-
 import os
 import random
 import threading
@@ -215,6 +207,7 @@ class EngineWrapper:
         """强制保存"""
         with self._lock:
             self._engine.save()
+            self._last_save_ms = int(time.time() * 1000)
 
     def load(self) -> None:
         """从文件重新加载"""
