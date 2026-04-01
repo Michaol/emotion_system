@@ -110,9 +110,9 @@ mod tests {
 
     #[test]
     fn test_half_life_conversion() {
-        let rate = half_life_to_rate(12.0);
+        let rate = half_life_to_rate(24.0);
         let hl = rate_to_half_life(rate);
-        assert!((hl - 12.0).abs() < 1e-4);
+        assert!((hl - 24.0).abs() < 1e-4);
     }
 
     #[test]

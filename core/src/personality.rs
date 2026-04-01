@@ -69,12 +69,17 @@ pub struct DecayRates {
 }
 
 impl DecayRates {
-    /// 基于默认半衰期 (V=12h, A=8h, D=15h) 和人格特质调制
+    /// 基于默认半衰期 (V=24h, A=4h, D=36h) 和人格特质调制
+    ///
+    /// 半衰期依据: Verduyn & Lavrijsen (2014), Motivation and Emotion.
+    /// - Valence: 24h (悲伤可持续数天，快乐数小时)
+    /// - Arousal: 4h (生理激活消退快，恐惧 ~30min)
+    /// - Dominance: 36h (支配感与自我认知相关，变化最慢)
     #[must_use]
     pub fn from_personality(p: &OceanProfile) -> Self {
-        let base_v = half_life_to_rate(12.0);
-        let base_a = half_life_to_rate(8.0);
-        let base_d = half_life_to_rate(15.0);
+        let base_v = half_life_to_rate(24.0);
+        let base_a = half_life_to_rate(4.0);
+        let base_d = half_life_to_rate(36.0);
 
         // 神经质↑ → 负面衰减更慢 (rate × 0.84~1.0)
         let n_mod = 1.0 - 0.16 * (p.neuroticism - 0.5).max(0.0);

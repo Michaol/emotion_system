@@ -1,4 +1,4 @@
-# Emotion Engine 2.2.0
+# Emotion Engine 2.3.0
 
 [中文](#中文) | [English](#english) | [🤖 For AI Agents](FOR_AI.md)
 
@@ -37,6 +37,7 @@
 | **对立情绪联动** | 更新一种情绪时自动影响其对立面 (如 喜↔哀, 信↔厌) |
 | **OCEAN 人格驱动** | 大五人格特质决定情绪基线和衰减率 |
 | **按需衰减** | 仅在读取时计算，极低 CPU 占用 |
+| **心理学半衰期** | V=24h (悲伤可持续数天), A=4h (生理激活消退快), D=36h (支配感变化最慢) — 基于 Verduyn & Lavrijsen (2014) |
 | **昼夜衰减** | 日间 (08:00-24:00) 正常衰减; 夜间 (00:00-08:00) Arousal ×3 加速回归，Dominance ×0.5 减缓 |
 | **情感记忆** | 幂律衰减 + 召回强化 + 显著性加权 |
 | **反刍引擎** | 高强度事件产生多轮余波效应 |
@@ -165,6 +166,7 @@ A high-performance emotion simulation engine with a **Rust core**. Implements **
 | **Opposite Linkage** | Updating one emotion auto-affects its opposite (joy↔sadness, trust↔disgust) |
 | **OCEAN Personality** | Big Five traits drive baseline and decay rates |
 | **On-Demand Decay** | Computed only on read, minimal CPU overhead |
+| **Psychology-Backed Half-Lives** | V=24h, A=4h, D=36h — based on Verduyn & Lavrijsen (2014) |
 | **Emotion Memory** | Power-law decay + recall reinforcement + salience weighting |
 | **Rumination Engine** | High-intensity events produce multi-round aftereffects |
 | **MCP Native** | FastMCP-based, supports OpenClaw dynamic injection |
