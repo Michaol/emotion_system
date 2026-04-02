@@ -216,6 +216,7 @@ impl Engine {
         }
 
         self.state.last_updated_ms = now;
+        self.dirty = true; // 衰减改变了状态，标记脏以确保持久化
     }
 
     /// 构造快照
