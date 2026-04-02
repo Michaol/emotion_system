@@ -1,6 +1,6 @@
-# Emotion Engine 2.3.0 — AI Agent Reference
+# Emotion Engine 2.3.1 — AI Agent Reference
 
-> Rust-core VAD emotion engine. Plutchik 8 emotions. Memory coupling. MCP-native. OCEAN personality. Psychology-backed decay rates (Verduyn & Lavrijsen, 2014).
+> Rust-core VAD emotion engine. Plutchik 8 emotions. Memory coupling. MCP-native. OCEAN personality. Psychology-backed decay rates (Verduyn & Lavrijsen, 2014). Dirty flag fix for decay persistence.
 
 ## INSTALL
 
@@ -102,6 +102,8 @@ All accept optional `agent_id` (default: env `EMOTION_AGENT_ID`).
 **Day/Night Decay** (v2.2.0): Decay rate varies by system time (UTC+8). Daytime (08:00-24:00): normal rate. Nighttime (00:00-08:00): Arousal ×3 faster (sleep consolidation), Valence ×1.5, Dominance ×0.5. Cross-period decay auto-splits into segments.
 
 **Decay Half-Lives** (v2.3.0): Based on Verduyn & Lavrijsen (2014) empirical study of emotion duration. V=24h (sadness lasts days), A=4h (physiological arousal fades fast, fear ~30min), D=36h (dominance tied to self-concept, changes slowest).
+
+**Decay Persistence** (v2.3.1): Decay values now correctly marked as dirty after `get_state()`, ensuring they are saved to disk on next `maybe_save()` or explicit `save()`.
 
 ## PERSONALITY (OCEAN)
 

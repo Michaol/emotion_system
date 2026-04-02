@@ -1,4 +1,4 @@
-# Emotion Engine 2.3.0
+# Emotion Engine 2.3.1
 
 [中文](#中文) | [English](#english) | [🤖 For AI Agents](FOR_AI.md)
 
@@ -13,21 +13,6 @@
 ### 项目简介
 本项目是一个基于 Rust 核心开发的高性能情绪模拟引擎。采用 **VAD (Valence-Arousal-Dominance)** 三维情绪空间模型，为 AI 代理 (Agents) 提供动态情绪演化、性格漂移、自我反思以及 **Plutchik 八基本情绪分类** 与 **情感记忆耦合** 能力。
 
-### v2.0.0 新特性
-
-- **Plutchik 八基本情绪模型**: 在 VAD 连续坐标轴基础上，新增离散的八种基本情绪分类（喜、信、惧、惊、哀、厌、怒、期），支持对立情绪自动联动。
-- **KNN 情绪分类器**: 基于 K-Nearest Neighbors 算法，从 VAD 坐标推断 Plutchik 标签及置信度。
-- **情感记忆耦合 (Emotion-Memory Coupling)**: 事件附带情绪标签存储，基于 cosine similarity 检索，支持幂律衰减和召回强化。
-- **语义丰富 Prompt**: XML 输出新增 `<plutchik>` 和 `<memories>` 节点，为 LLM 提供更丰富的情绪上下文。
-- **零新增依赖**: 所有新功能基于已有 serde/std 库实现，无额外外部依赖。
-
-### v2.2.0 新特性
-
-- **昼夜情绪衰减系统**: 基于系统时间的差异化衰减。日间 (08:00-24:00) 正常衰减; 夜间 (00:00-08:00) Arousal ×3 加速回归（模拟睡眠平复），Valence ×1.5，Dominance ×0.5。
-- **跨时段分段衰减**: 跨越昼夜边界时自动分段计算，如 22:00→次日 10:00 自动拆分为 2h 日间 + 8h 夜间 + 2h 日间。
-- **Prompt `<time_phase>` 标注**: XML 输出新增 `<time_phase>daytime/sleeping</time_phase>` 节点，LLM 可据此调整语气。
-- **OCEAN 人格 Config-as-Fallback**: 仅当 state 中人格为默认值 (0.5) 时从 config 加载，已漂移的人格在重启后保留。
-
 ### 核心特性
 
 | 特性 | 说明 |
@@ -37,8 +22,8 @@
 | **对立情绪联动** | 更新一种情绪时自动影响其对立面 (如 喜↔哀, 信↔厌) |
 | **OCEAN 人格驱动** | 大五人格特质决定情绪基线和衰减率 |
 | **按需衰减** | 仅在读取时计算，极低 CPU 占用 |
-| **心理学半衰期** | V=24h (悲伤可持续数天), A=4h (生理激活消退快), D=36h (支配感变化最慢) — 基于 Verduyn & Lavrijsen (2014) |
-| **昼夜衰减** | 日间 (08:00-24:00) 正常衰减; 夜间 (00:00-08:00) Arousal ×3 加速回归，Dominance ×0.5 减缓 |
+| **心理学半衰期** | V=24h, A=4h, D=36h — 基于 Verduyn & Lavrijsen (2014) 实证研究 |
+| **昼夜衰减** | 日间正常衰减; 夜间 Arousal ×3 加速回归，Dominance ×0.5 减缓 |
 | **情感记忆** | 幂律衰减 + 召回强化 + 显著性加权 |
 | **反刍引擎** | 高强度事件产生多轮余波效应 |
 | **MCP 原生** | FastMCP 实现，支持 OpenClaw 动态注入 |
@@ -125,7 +110,7 @@ maturin develop --release
 #### 可用资源 (Resources)
 
 - `emotion://state/{agent_id}` — 实时 VAD 状态与 Plutchik 分类 (JSON)
-- `emotion://prompt/{agent_id}` — 包含 `<plutchik>` 和 `<memories>` 的 XML 上下文
+- `emotion://prompt/{agent_id}` — 包含 `<plutchik>`, `<memories>`, `<time_phase>` 的 XML 上下文
 - `emotion://personality/{agent_id}` — OCEAN 五维度人格
 - `emotion://reflect/{agent_id}` — 最新反思文本
 
@@ -136,26 +121,40 @@ emotion-bridge
 # 访问 http://localhost:8000
 ```
 
+### 历史版本更新日志
+
+<details>
+<summary><strong>v2.3.0</strong> — 心理学半衰期 + decay 脏标记修复</summary>
+
+- **半衰期调整**: V=24h, A=4h, D=36h — 基于 Verduyn & Lavrijsen (2014) 情绪持续时间实证研究
+- **dirty 标志修复**: `apply_decay_to_current()` 衰减后设置 `dirty = true`，确保衰减值被持久化
+- **CORS 安全**: Bridge 服务器限制为 localhost
+</details>
+
+<details>
+<summary><strong>v2.2.0</strong> — 昼夜衰减 + Config-as-Fallback</summary>
+
+- **昼夜情绪衰减系统**: 基于系统时间的差异化衰减。日间 (08:00-24:00) 正常衰减; 夜间 (00:00-08:00) Arousal ×3 加速回归，Valence ×1.5，Dominance ×0.5
+- **跨时段分段衰减**: 跨越昼夜边界时自动分段计算
+- **Prompt `<time_phase>` 标注**: 新增 `<time_phase>daytime/sleeping</time_phase>` 节点
+- **OCEAN 人格 Config-as-Fallback**: 仅当 state 中人格为默认值 (0.5) 时从 config 加载，已漂移的人格在重启后保留
+</details>
+
+<details>
+<summary><strong>v2.0.0</strong> — Plutchik + Memory 耦合</summary>
+
+- **Plutchik 八基本情绪模型**: 八种基本情绪分类，支持对立情绪自动联动
+- **KNN 情绪分类器**: 从 VAD 坐标推断 Plutchik 标签及置信度
+- **情感记忆耦合**: 事件附带情绪标签存储，幂律衰减和召回强化
+- **语义丰富 Prompt**: XML 输出新增 `<plutchik>` 和 `<memories>` 节点
+</details>
+
 ---
 
 ## English
 
 ### Overview
 A high-performance emotion simulation engine with a **Rust core**. Implements **VAD (Valence-Arousal-Dominance)** modeling with **Plutchik 8-basic-emotion classification** and **emotion-memory coupling** for AI Agents.
-
-### v2.0.0 Highlights
-
-- **Plutchik Model**: 8 discrete emotions (Joy, Trust, Fear, Surprise, Sadness, Disgust, Anger, Anticipation) with automatic opposite linkage.
-- **KNN Classifier**: K-Nearest Neighbors mapping from VAD coordinates to Plutchik labels with confidence scores.
-- **Emotion-Memory Coupling**: Events stored with emotion tags, power-law decay, recall reinforcement, cosine-similarity retrieval.
-- **Rich Prompt XML**: New `<plutchik>` and `<memories>` nodes for LLM context enrichment.
-
-### v2.2.0 Highlights
-
-- **Day/Night Decay**: Time-based differential decay. Daytime (08:00-24:00) normal; Nighttime (00:00-08:00) Arousal ×3 (sleep consolidation), Valence ×1.5, Dominance ×0.5.
-- **Cross-Period Split Decay**: Automatically splits decay across day/night boundaries (e.g., 22:00→10:00 = 2h day + 8h night + 2h day).
-- **Prompt `<time_phase>`**: New `<time_phase>daytime/sleeping</time_phase>` XML node for LLM context.
-- **Config-as-Fallback Personality**: OCEAN loaded from config only when state has defaults (0.5); drifted personality preserved across restarts.
 
 ### Key Features
 
@@ -253,7 +252,7 @@ Start a single server and pass `agent_id` dynamically via tools.
 #### Available Resources
 
 - `emotion://state/{agent_id}` — Real-time VAD + Plutchik classification (JSON)
-- `emotion://prompt/{agent_id}` — XML context with `<plutchik>` and `<memories>`
+- `emotion://prompt/{agent_id}` — XML context with `<plutchik>`, `<memories>`, `<time_phase>`
 - `emotion://personality/{agent_id}` — OCEAN five-dimension values
 - `emotion://reflect/{agent_id}` — Latest reflection text
 
@@ -263,6 +262,34 @@ Start a single server and pass `agent_id` dynamically via tools.
 emotion-bridge
 # Visit http://localhost:8000
 ```
+
+### Changelog
+
+<details>
+<summary><strong>v2.3.0</strong> — Psychology-backed half-lives + dirty flag fix</summary>
+
+- **Half-life adjustment**: V=24h, A=4h, D=36h — based on Verduyn & Lavrijsen (2014) empirical study
+- **dirty flag fix**: `apply_decay_to_current()` now sets `dirty = true` after decay
+- **CORS security**: Bridge server restricted to localhost
+</details>
+
+<details>
+<summary><strong>v2.2.0</strong> — Day/Night Decay + Config-as-Fallback</summary>
+
+- **Day/Night Decay**: Time-based differential decay. Nighttime Arousal ×3, Valence ×1.5, Dominance ×0.5
+- **Cross-Period Split Decay**: Auto-splits decay across day/night boundaries
+- **Prompt `<time_phase>`**: New `<time_phase>daytime/sleeping</time_phase>` XML node
+- **Config-as-Fallback**: OCEAN loaded from config only when state has defaults (0.5)
+</details>
+
+<details>
+<summary><strong>v2.0.0</strong> — Plutchik + Memory Coupling</summary>
+
+- **Plutchik 8 Emotions**: Joy, Trust, Fear, Surprise, Sadness, Disgust, Anger, Anticipation with opposite linkage
+- **KNN Classifier**: VAD-to-Plutchik mapping with confidence scores
+- **Emotion-Memory Coupling**: Events stored with emotion tags, power-law decay, recall reinforcement
+- **Rich Prompt XML**: `<plutchik>` and `<memories>` nodes for LLM context
+</details>
 
 ---
 

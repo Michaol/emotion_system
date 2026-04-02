@@ -327,7 +327,7 @@ impl Engine {
         self.event_config.events.contains_key(name)
     }
 
-    /// 获取当前状态 (只读，应用衰减但不标脏)
+    /// 获取当前状态 (应用衰减并标脏，确保衰减值被持久化)
     pub fn get_state(&mut self) -> EmotionSnapshot {
         self.apply_decay_to_current();
         self.snapshot()
