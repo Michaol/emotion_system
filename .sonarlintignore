@@ -1,0 +1,5 @@
+# Exclude third-party libraries from SonarLint analysis
+**/site-packages/**
+**/node_modules/**
+**/target/**
+**/.git/**

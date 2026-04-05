@@ -135,7 +135,8 @@ def main():
     print("\n🚀 Emotion Engine Bridge Server running at http://localhost:8000")
     print("👉 Open dashboard/index.html in your browser!\n")
     # 使用字符串形式启动以支持更健壮的重载
-    uvicorn.run("emotion_engine.bridge:app", host="0.0.0.0", port=8000, reload=True)
+    # 仅绑定 localhost 以提高安全性（生产环境如需外部访问请使用反向代理）
+    uvicorn.run("emotion_engine.bridge:app", host="127.0.0.1", port=8000, reload=True)
 
 
 if __name__ == "__main__":

@@ -280,8 +280,8 @@ button:active { transform: scale(0.95); }
 .btn-primary { background: var(--primary); color: white; }
 .btn-secondary { background: var(--glass-accent); color: white; }
 .btn-reflect { background: var(--accent); color: white; }
-.btn-dream { background: #8b5cf6; color: white; }
-.btn-evolve { background: #10b981; color: white; }
+.btn-dream { background: #7c3aed; color: white; }
+.btn-evolve { background: #047857; color: white; }
 
 /* Reflection Area */
 .reflection-box {

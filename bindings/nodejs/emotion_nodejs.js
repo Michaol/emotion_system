@@ -1,7 +1,7 @@
-/* eslint-disable */
+/* eslint-disable @typescript-eslint/no-var-requires, no-undef */
 // Auto-generated loader for NAPI-RS native addon
-const { join } = require('path');
-const { existsSync } = require('fs');
+const { join } = require('node:path');
+const { existsSync } = require('node:fs');
 
 function loadNativeAddon() {
   const candidates = [
