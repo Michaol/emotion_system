@@ -1,5 +1,7 @@
 # Emotion Engine 2.3.1
 
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=Michaol_emotion_system&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=Michaol_emotion_system)
+
 [中文](#中文) | [English](#english) | [🤖 For AI Agents](FOR_AI.md)
 
 > [!IMPORTANT]
